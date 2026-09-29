@@ -1,0 +1,22 @@
+# Python / uv
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Local configuration, state and logs
+.env
+certwatch.env
+var/
+*.log
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store

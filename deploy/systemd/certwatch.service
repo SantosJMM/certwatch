@@ -1,0 +1,7 @@
+[Unit]
+Description=Certwatch dynamic certificate check
+After=network-online.target
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/bin/certwatch --dry-run

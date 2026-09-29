@@ -1,0 +1,2 @@
+# Install as root:root 0440 after replacing the service account if needed.
+certwatch-agent ALL=(root) NOPASSWD: /usr/local/libexec/certwatch-action read certs

@@ -1,0 +1,9 @@
+#!/bin/sh
+# Install root:root 0750. Fixed root boundary; never source dotenv files.
+set -eu
+[ "$#" -eq 2 ] || exit 64
+action=$1; target=$2
+case "$action:$target" in
+  read:certs) exec /usr/local/bin/certwatch --dry-run ;;
+  *) exit 64 ;;
+esac

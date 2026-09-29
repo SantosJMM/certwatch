@@ -1,0 +1,9 @@
+[Unit]
+Description=Run Certwatch daily
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=1h
+Unit=certwatch.service
+[Install]
+WantedBy=timers.target
