@@ -33,7 +33,7 @@ sudo install -d -m 0750 /etc/certwatch /var/lib/certwatch /var/lib/certwatch-age
 sudo install -m 0640 -o root -g certwatch-agent certwatch.env /etc/certwatch/certwatch.env
 sudo install -m 0750 -o root -g root deploy/libexec/certwatch-action /usr/local/libexec/certwatch-action
 sudo install -m 0440 -o root -g root deploy/sudoers/certwatch-agent /etc/sudoers.d/certwatch-agent
-sudo install -m 0644 deploy/systemd/certwatch.service deploy/systemd/certwatch.timer /etc/systemd/system/
+sudo install -m 0644 deploy/systemd/certwatch.service deploy/systemd/certwatch.timer deploy/systemd/certwatch-agent.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now certwatch.timer
 ```
@@ -42,7 +42,7 @@ sudo systemctl enable --now certwatch.timer
 
 ```bash
 sudo systemctl disable --now certwatch.timer
-sudo rm -f /etc/systemd/system/certwatch.service /etc/systemd/system/certwatch.timer
+sudo rm -f /etc/systemd/system/certwatch.service /etc/systemd/system/certwatch.timer /etc/systemd/system/certwatch-agent.service
 sudo rm -f /etc/sudoers.d/certwatch-agent /usr/local/libexec/certwatch-action /usr/local/bin/certwatch /usr/local/bin/certwatch-agent
 sudo systemctl daemon-reload
 # Keep /etc/certwatch and /var/lib/certwatch until configuration and audit retention are reviewed.
@@ -50,7 +50,7 @@ sudo systemctl daemon-reload
 
 ## Security model
 
-The optional command-agent primitives must run as a non-root account. This public extraction deliberately ships no polling systemd unit: review and implement your organisation's Telegram operation policy before exposing remote control. The public helper template exposes only `read certs`; it rejects every other verb or argument count. Production deployments may add renewal/restart verbs only with separate allowlist entries and helper-side validation. Never source dotenv files, expose a webhook, or grant unrestricted `sudo`.
+The optional command-agent primitives must run as a non-root account. The repository ships `deploy/systemd/certwatch-agent.service` as the hardened production unit definition; review and implement your organisation's Telegram operation policy before exposing remote control. The public helper template exposes only `read certs`; it rejects every other verb or argument count. Production deployments may add renewal/restart verbs only with separate allowlist entries and helper-side validation. Never source dotenv files, expose a webhook, or grant unrestricted `sudo`.
 
 ## Development
 
@@ -103,7 +103,7 @@ Read-only helper failures report only the bounded stage and exit status. Helper 
 
 ### systemd privilege note
 
-The public repository intentionally does not ship a `certwatch-agent.service` template. The agent's narrow `sudo -n` helper requires the service process to retain the ability to acquire the explicitly allowlisted root privilege.
+The repository ships `deploy/systemd/certwatch-agent.service` with the hardening combination validated for the narrow `sudo -n` helper. The helper requires the service process to retain the ability to acquire the explicitly allowlisted root privilege.
 
 On the production host, isolated `systemd-run` tests showed that `PrivateDevices=true`, `ProtectKernelTunables=true`, and `ProtectKernelModules=true` each caused the non-root service process to run with kernel `NoNewPrivs: 1`, even when the unit explicitly set `NoNewPrivileges=false`. That prevents `sudo` from elevating to the allowlisted helper. `PrivateTmp=true`, `ProtectHome=true`, `ProtectSystem=strict`, and `ProtectControlGroups=true` did not set `NoNewPrivs` in the same tests.
 
