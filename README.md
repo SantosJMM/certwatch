@@ -103,4 +103,15 @@ Read-only helper failures report only the bounded stage and exit status. Helper 
 
 ### systemd privilege note
 
-The public repository intentionally does not ship a `certwatch-agent.service` template. In the production deployment, `RestrictAddressFamilies=` installed seccomp filters that set the kernel `no_new_privileges` flag, preventing the non-root agent from using its narrow `sudo` helper. If a deployment needs the `read certs` helper, do not add `RestrictAddressFamilies=` without verifying that `sudo` can still elevate; retain the remaining filesystem and device hardening controls.
+The public repository intentionally does not ship a `certwatch-agent.service` template. The agent's narrow `sudo -n` helper requires the service process to retain the ability to acquire the explicitly allowlisted root privilege.
+
+On the production host, isolated `systemd-run` tests showed that `PrivateDevices=true`, `ProtectKernelTunables=true`, and `ProtectKernelModules=true` each caused the non-root service process to run with kernel `NoNewPrivs: 1`, even when the unit explicitly set `NoNewPrivileges=false`. That prevents `sudo` from elevating to the allowlisted helper. `PrivateTmp=true`, `ProtectHome=true`, `ProtectSystem=strict`, and `ProtectControlGroups=true` did not set `NoNewPrivs` in the same tests.
+
+For deployments that use the helper, keep `NoNewPrivileges=false` and do not enable hardening directives that implicitly force `no_new_privileges` without testing the effective process state. Verify after deployment with:
+
+```bash
+PID=$(systemctl show -p MainPID --value certwatch-agent)
+grep NoNewPrivs /proc/$PID/status
+```
+
+The expected value is `NoNewPrivs: 0`. Keep the service account out of the general `sudo` group and grant only the explicit commands required through `/etc/sudoers.d/certwatch-agent`.
