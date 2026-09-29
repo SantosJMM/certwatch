@@ -1,0 +1,36 @@
+[Unit]
+Description=Certwatch allowlisted Telegram command agent
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=certwatch-agent
+Group=certwatch-agent
+ExecStartPre=/usr/local/bin/certwatch-agent --validate-config
+ExecStart=/usr/local/bin/certwatch-agent
+Restart=on-failure
+RestartSec=15s
+
+StateDirectory=certwatch-agent
+StateDirectoryMode=0750
+LogsDirectory=certwatch
+LogsDirectoryMode=0750
+UMask=0027
+
+# The agent uses a narrowly allowlisted sudo helper. These settings were
+# verified to preserve NoNewPrivs: 0 on the production host.
+NoNewPrivileges=false
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectControlGroups=true
+
+# Do not enable PrivateDevices, ProtectKernelTunables or
+# ProtectKernelModules without re-testing the effective NoNewPrivs state:
+# each forced NoNewPrivs: 1 on the production host and prevented sudo
+# from invoking the allowlisted helper.
+ReadWritePaths=/var/lib/certwatch-agent /var/log/certwatch
+
+[Install]
+WantedBy=multi-user.target
