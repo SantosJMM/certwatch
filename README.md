@@ -100,3 +100,7 @@ sudo bash uninstall.sh --yes --purge-data
 ## Diagnostic privacy
 
 Read-only helper failures report only the bounded stage and exit status. Helper stderr is intentionally not relayed to Telegram because it may contain local paths or provider output.
+
+### systemd privilege note
+
+The public repository intentionally does not ship a `certwatch-agent.service` template. In the production deployment, `RestrictAddressFamilies=` installed seccomp filters that set the kernel `no_new_privileges` flag, preventing the non-root agent from using its narrow `sudo` helper. If a deployment needs the `read certs` helper, do not add `RestrictAddressFamilies=` without verifying that `sudo` can still elevate; retain the remaining filesystem and device hardening controls.
