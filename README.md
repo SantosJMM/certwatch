@@ -96,3 +96,7 @@ sudo bash uninstall.sh --yes
 # Explicitly destructive, only if retention is no longer required:
 sudo bash uninstall.sh --yes --purge-data
 ```
+
+## Diagnostic privacy
+
+Read-only helper failures report only the bounded stage and exit status. Helper stderr is intentionally not relayed to Telegram because it may contain local paths or provider output.

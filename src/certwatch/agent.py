@@ -6,8 +6,13 @@ from .config import ConfigError, enabled, load
 
 def read_certs(config: dict[str,str]) -> dict:
     helper=config.get("CERTWATCH_ACTION_HELPER","/usr/local/libexec/certwatch-action")
-    run=subprocess.run(["/usr/bin/sudo","-n",helper,"read","certs"],text=True,capture_output=True,timeout=90,check=False)
-    if run.returncode: raise ConfigError("certificate check failed")
+    try:
+        run=subprocess.run(["/usr/bin/sudo","-n",helper,"read","certs"],text=True,capture_output=True,timeout=90,check=False)
+    except subprocess.TimeoutExpired as exc:
+        raise ConfigError("certificate read helper timed out after 90 seconds") from exc
+    if run.returncode:
+        # Do not relay stderr: it can contain local paths or provider output.
+        raise ConfigError(f"certificate read helper failed at sudo-helper stage (exit {run.returncode})")
     try: result=json.loads(run.stdout)
     except json.JSONDecodeError as exc: raise ConfigError("certificate helper returned invalid JSON") from exc
     if not isinstance(result,dict): raise ConfigError("certificate helper returned invalid JSON")
